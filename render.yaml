@@ -1,0 +1,35 @@
+# Render Blueprint for JOHN'S SLOTS
+# Deploy: Render Dashboard -> New -> Blueprint -> pick this repo -> fill in admin login -> Apply.
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: johns-slots
+    runtime: node
+    plan: starter            # paid tier (~$7/mo). Required for the persistent disk below.
+                             # Use `free` instead if you don't mind ALL accounts/balances
+                             # resetting on every restart (and remove the `disk:` block).
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /
+    autoDeploy: true         # redeploys automatically when you push to the repo
+    envVars:
+      - key: ADMIN_USERNAME
+        sync: false          # Render prompts you for this value when you deploy
+      - key: ADMIN_PASSWORD
+        sync: false          # Render prompts you for this value when you deploy
+      - key: JWT_SECRET
+        generateValue: true  # Render generates a strong random secret automatically
+      - key: DATA_DIR
+        value: /var/data     # app writes data.json + .secret here, onto the disk
+    disk:
+      name: johns-slots-data
+      mountPath: /var/data   # only files under this path survive restarts/redeploys
+      sizeGB: 1
+
+    # ---- Custom domain (optional shortcut) ----
+    # You can pre-register your domain here so Render starts issuing HTTPS for it.
+    # Uncomment and replace with your real domain. You STILL must add the DNS
+    # records in Namecheap (see the deploy notes) for it to actually resolve.
+    # domains:
+    #   - yourdomain.com
+    #   - www.yourdomain.com

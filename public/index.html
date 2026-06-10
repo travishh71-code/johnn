@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>JOHN'S SLOTS — Win Hourly</title>
+
+<!-- App / PWA shell so it feels native inside a phone webview -->
+<meta name="theme-color" content="#070512">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="John's Slots">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/png" sizes="32x32" href="assets/icon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="assets/icon-192.png">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;700;800&family=Syne:wght@700;800&family=Sora:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="grain"></div>
+<div class="chips"><i></i><i></i><i></i><i></i><i></i></div>
+<div class="toast-wrap" id="toasts"></div>
+
+<!-- ===================== AUTH ===================== -->
+<section id="auth">
+  <div class="auth-card glass">
+    <img class="auth-logo" src="assets/logo.jpg" alt="John's Slots" width="200" height="200">
+    <div class="brand-sub">Spin · Win · Repeat</div>
+
+    <div class="tabs">
+      <button id="tabLogin" class="active">Log&nbsp;In</button>
+      <button id="tabSignup">Sign&nbsp;Up</button>
+    </div>
+
+    <form id="formLogin" autocomplete="on">
+      <label class="f">Username</label>
+      <input id="liUser" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="john@yourname">
+      <label class="f">Password</label>
+      <input id="liPass" name="password" type="password" autocomplete="current-password" placeholder="••••••••">
+      <label class="remember"><input type="checkbox" id="liRemember" checked> Keep me signed in on this device</label>
+      <p class="hint" style="margin-top:4px">Untick this and you'll be logged out when the tab closes. Your browser will also offer to save your password.</p>
+      <button class="btn" id="doLogin" type="submit" style="width:100%;margin-top:16px">Enter the Floor</button>
+    </form>
+
+    <form id="formSignup" class="hidden" autocomplete="on">
+      <label class="f">Choose a username</label>
+      <div class="prefix-input">
+        <span class="prefix">john@</span>
+        <input id="suUser" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder="yourname">
+      </div>
+      <p class="hint" style="margin-top:6px">Your login becomes <b id="suPreview">john@yourname</b></p>
+      <label class="f">Email <span class="hint" style="letter-spacing:0">(optional — for account recovery)</span></label>
+      <input id="suEmail" name="email" type="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="you@example.com">
+      <label class="f">Create a password</label>
+      <input id="suPass" name="new-password" type="password" autocomplete="new-password" placeholder="min 6 characters">
+      <label class="remember"><input type="checkbox" id="suRemember" checked> Keep me signed in on this device</label>
+      <button class="btn violet" id="doSignup" type="submit" style="width:100%;margin-top:16px">Create Account</button>
+    </form>
+
+    <div class="legal">
+      <div class="badge18">18+ ONLY</div>
+      <div class="welcome">WELCOME TO JOHN'S SLOTS. Play responsibly.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== APP ===================== -->
+<div id="app" class="hidden">
+  <header class="topbar">
+    <div class="wrap row">
+      <div class="logo"><img src="assets/logo.jpg" alt="John's Slots" class="logo-img"><span class="logo-tx">JOHN'S SLOTS</span></div>
+      <nav class="tabsnav" id="nav">
+        <button data-view="home" class="active">Home</button>
+        <button data-view="feed">Feed</button>
+        <button data-view="bonus">Bonus</button>
+        <button data-view="wallet">Wallet</button>
+        <button data-view="vault">Vault</button>
+        <button data-view="announcements">News</button>
+        <button data-view="giveaways">Giveaways</button>
+        <button data-view="draw">Lucky Draw</button>
+        <button data-view="downloads">Games</button>
+        <button data-view="reports" id="navReports" class="hidden">Reports</button>
+        <button data-view="admin" id="navAdmin" class="hidden">Admin</button>
+      </nav>
+      <div class="userbox">
+        <div class="bal"><span class="coin"></span><span class="amt" id="balAmt">0.00</span></div>
+        <span class="uname" id="uName"></span>
+        <button class="btn ghost sm" id="logout">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ---------- HOME / DASHBOARD ---------- -->
+    <section class="view active" id="view-home">
+      <div class="dash">
+        <div class="hero glass">
+          <div class="label">Welcome back</div>
+          <h1>Your Lucky<br>Streak Starts <span class="glow">Now</span></h1>
+          <div class="bigbal">
+            <span class="coin" style="width:34px;height:34px"></span>
+            <span class="n glow" id="heroBal">$0.00</span>
+          </div>
+          <p class="hint">Total balance — grows every time you spin or win a draw.</p>
+          <button class="btn sm ghost" id="heroRedeem" style="margin-top:14px">💸 Redeem balance →</button>
+          <div class="stat-row">
+            <div class="stat"><div class="k glow" id="statSpins">0</div><div class="l">Spins won</div></div>
+            <div class="stat"><div class="k" id="statOnline">0</div><div class="l">Players online</div></div>
+            <div class="stat"><div class="k" id="statStreak">Ready</div><div class="l">Next spin</div></div>
+          </div>
+        </div>
+
+        <div class="spinbox glass">
+          <div class="label">Hourly Lucky Spin</div>
+          <div class="reel-frame">
+            <div class="reel-line"></div>
+            <div class="reel" id="reel"></div>
+          </div>
+          <div class="won" id="wonText"></div>
+          <button class="btn" id="spinBtn" style="width:100%;margin-top:6px">SPIN — win $0.10–$3.00</button>
+          <p class="hint" style="margin-top:12px">One free spin every hour. Winnings drop straight into your balance.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:24px" class="glass box">
+        <div class="label">Your recent wins</div>
+        <div class="mini-list" id="recentWins" style="margin-top:14px"></div>
+      </div>
+    </section>
+
+    <!-- ---------- WALLET / REDEEM ---------- -->
+    <section class="view" id="view-wallet">
+      <div class="view-head">
+        <div><div class="label">Cash out</div><h2>Wallet &amp; Redeem</h2></div>
+      </div>
+
+      <div class="wallet-grid">
+        <div class="glass box redeem-card">
+          <div class="label">Available to redeem</div>
+          <div class="bigbal" style="margin:12px 0 4px">
+            <span class="coin" style="width:30px;height:30px"></span>
+            <span class="n glow" id="walletBal">$0.00</span>
+          </div>
+          <p class="hint" id="redeemHint">Redeem turns your balance into a receipt code you can use to load credits into your game.</p>
+          <button class="btn" id="redeemBtn" style="width:100%;margin-top:16px">Redeem balance</button>
+          <div class="warn" id="redeemWarn">
+            ⏳ Heads up: a receipt must be claimed within <b>24 hours</b>. If it isn't loaded into your game in time,
+            it expires and the amount is lost (your balance does not come back). Minimum to redeem is <b>$1.00</b>.
+          </div>
+        </div>
+
+        <div class="glass box">
+          <div class="label">Your receipts</div>
+          <div class="mini-list" id="receiptList" style="max-height:560px;margin-top:14px">
+            <div class="hint">No receipts yet — redeem your balance to get one.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CASHOUT RULES -->
+      <div class="glass box rules-card" style="margin-top:24px">
+        <div class="label">💵 Cashout Rules</div>
+        <div class="rules-grid">
+          <div class="rule">
+            <div class="rule-k glow">Min deposit $5</div>
+            <div class="rule-v">Cashout min / max: <b>$50</b></div>
+          </div>
+          <div class="rule">
+            <div class="rule-k glow">Deposit $10 &amp; above</div>
+            <div class="rule-v">Cashout min <b>2.5×</b> · max <b>15×</b> your deposit</div>
+          </div>
+        </div>
+        <p class="hint" style="margin-top:12px">Rules apply to every game cashout. Ask an agent if you're not sure which tier you're in.</p>
+      </div>
+    </section>
+
+    <!-- ---------- FEED (stories + posts + FB links + feedback) ---------- -->
+    <section class="view" id="view-feed">
+      <div class="view-head">
+        <div><div class="label">Fresh from the floor</div><h2>Feed</h2></div>
+      </div>
+
+      <div class="stories-wrap glass box" id="storiesWrap">
+        <div class="label">Stories <span class="hint" style="letter-spacing:0">· disappear after 24h</span></div>
+        <div class="stories-row" id="storiesRow"><div class="hint">No stories right now.</div></div>
+      </div>
+
+      <div class="fb-links glass box" id="fbLinks" style="margin-top:18px">
+        <div class="label">Find us on Facebook</div>
+        <div class="fb-row" id="fbRow"><span class="hint">Links coming soon.</span></div>
+      </div>
+
+      <div class="cards" id="postList" style="margin-top:18px"></div>
+
+      <div class="glass box" style="margin-top:24px">
+        <div class="label">💬 Send feedback</div>
+        <p class="hint" style="margin-top:8px">Tell us what to improve — only the admin can read these.</p>
+        <textarea id="fbMsg" rows="4" maxlength="1000" placeholder="Your feedback…"></textarea>
+        <button class="btn sm" id="sendFeedback" style="margin-top:12px">Send to admin</button>
+      </div>
+    </section>
+
+    <!-- ---------- DEPOSIT BONUS WHEEL ---------- -->
+    <section class="view" id="view-bonus">
+      <div class="view-head">
+        <div><div class="label">Daily deposit booster</div><h2>Deposit Bonus Wheel</h2></div>
+      </div>
+      <div class="draw-grid">
+        <div class="wheel-stage glass">
+          <div class="wheel-shell bonus-shell">
+            <div class="wheel-pointer"></div>
+            <canvas class="wheel-canvas" id="bonusWheel" width="600" height="600"></canvas>
+            <div class="wheel-hub">💰</div>
+          </div>
+          <div class="winner-banner" id="bonusBanner">
+            <div class="label">Spin once a day</div>
+            <div class="hint" style="margin-top:6px">Win a <b>10% – 30% deposit bonus</b>. Show the result to an agent to claim it on your next deposit.</div>
+          </div>
+          <button class="btn" id="bonusSpinBtn" style="width:100%;max-width:340px;margin-top:16px">🎡 SPIN THE BONUS WHEEL</button>
+        </div>
+        <div class="parts glass">
+          <div class="label">Your bonus spins</div>
+          <div class="mini-list" id="bonusMine" style="margin-top:14px"><div class="hint">No bonus spins yet.</div></div>
+          <div class="warn" style="margin-top:14px">🎁 Each bonus must be claimed with an agent — it's applied to your <b>next deposit</b>. One spin per day.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- GAME VAULT (credentials notepad) ---------- -->
+    <section class="view" id="view-vault">
+      <div class="view-head">
+        <div><div class="label">Your private notepad</div><h2>Game Vault</h2></div>
+      </div>
+      <div class="adm-grid">
+        <div class="box glass">
+          <h3>Save a game login</h3>
+          <p class="hint">Keep all your game credentials in one place. Only you can see your vault.</p>
+          <label class="f">Game</label><input id="vGame" placeholder="e.g. Milkyway, Juwa, Orionstars…">
+          <label class="f">Game username / ID</label><input id="vUser" autocomplete="off" placeholder="Your in-game username">
+          <label class="f">Game password</label><input id="vPass" autocomplete="off" placeholder="Your in-game password">
+          <label class="f">Notes</label><textarea id="vNotes" rows="3" placeholder="Anything else…"></textarea>
+          <button class="btn" id="vAdd" style="margin-top:14px">Save to vault</button>
+        </div>
+        <div class="box glass">
+          <h3>Saved credentials</h3>
+          <div class="mini-list" id="vaultList" style="max-height:600px;margin-top:14px"><div class="hint">Nothing saved yet.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- EMPLOYEE REPORTS (Famous / Hulk / Travis) ---------- -->
+    <section class="view" id="view-reports">
+      <div class="view-head">
+        <div><div class="label">Agent desk</div><h2>Daily Report — <span id="repWho" class="glow">…</span></h2></div>
+      </div>
+      <div class="adm-grid">
+        <div class="box glass">
+          <h3>Submit today's numbers</h3>
+          <label class="f">Date</label><input id="repDate" type="date">
+          <label class="f">Total cash in ($)</label><input id="repIn" inputmode="decimal" placeholder="e.g. 450">
+          <label class="f">Total cash out ($)</label><input id="repOut" inputmode="decimal" placeholder="e.g. 300">
+          <button class="btn" id="repSubmit" style="margin-top:14px">Submit report</button>
+          <div class="warn" style="margin-top:14px">Submitting again for the same date <b>overwrites</b> your earlier numbers.</div>
+        </div>
+        <div class="box glass">
+          <h3>Your recent reports</h3>
+          <div class="mini-list" id="repMine" style="max-height:560px;margin-top:14px"><div class="hint">No reports yet.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- ANNOUNCEMENTS ---------- -->
+    <section class="view" id="view-announcements">
+      <div class="view-head">
+        <div><div class="label">Stay in the loop</div><h2>Announcements</h2></div>
+      </div>
+      <div class="cards" id="annList"></div>
+    </section>
+
+    <!-- ---------- GIVEAWAYS ---------- -->
+    <section class="view" id="view-giveaways">
+      <div class="view-head">
+        <div><div class="label">Free stuff, zero catch</div><h2>Giveaways</h2></div>
+      </div>
+      <div class="cards" id="giftList"></div>
+    </section>
+
+    <!-- ---------- LUCKY DRAW ---------- -->
+    <section class="view" id="view-draw">
+      <div class="view-head">
+        <div><div class="label">Live every day</div><h2>Daily Lucky Draw</h2></div>
+        <div class="live-pill"><span class="live-dot"></span><span id="watchers">0</span>&nbsp;watching live</div>
+      </div>
+      <div class="draw-grid">
+        <div class="wheel-stage glass">
+          <div class="wheel-shell">
+            <div class="wheel-pointer"></div>
+            <canvas class="wheel-canvas" id="wheel" width="600" height="600"></canvas>
+            <div class="wheel-hub">🎰</div>
+          </div>
+          <div class="winner-banner" id="winnerBanner">
+            <div class="label" id="drawStatus">Next draw in</div>
+            <div class="countdown" id="countdown"></div>
+          </div>
+        </div>
+        <div class="parts glass">
+          <div class="label">Today's 10 contenders</div>
+          <ol id="partsList"></ol>
+          <p class="hint" id="partsEmpty" style="margin-top:10px">The admin hasn't loaded today's contenders yet — check back soon.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ---------- DOWNLOADS ---------- -->
+    <section class="view" id="view-downloads">
+      <div class="view-head">
+        <div><div class="label">Get the apps</div><h2>Game Downloads</h2></div>
+      </div>
+      <div class="dl-grid" id="dlGrid"></div>
+    </section>
+
+    <!-- ---------- ADMIN ---------- -->
+    <section class="view" id="view-admin">
+      <div class="view-head">
+        <div><div class="label">Control room</div><h2>Admin Panel</h2></div>
+      </div>
+      <div class="admin-tabs" id="admTabs">
+        <button data-panel="draw" class="active">Lucky Draw</button>
+        <button data-panel="ann">Announcements</button>
+        <button data-panel="gift">Giveaways</button>
+        <button data-panel="dl">Game Links</button>
+        <button data-panel="users">Users</button>
+        <button data-panel="redeem">Redemptions</button>
+        <button data-panel="reports">📊 Reports</button>
+        <button data-panel="feedback">💬 Feedbacks</button>
+        <button data-panel="posts">📸 Posts &amp; Stories</button>
+        <button data-panel="bonus">🎡 Bonus Claims</button>
+        <button data-panel="settings">⚙️ Settings</button>
+      </div>
+
+      <!-- draw panel -->
+      <div class="panel active" id="panel-draw">
+        <div class="adm-grid">
+          <div class="box glass">
+            <h3>Today's contenders</h3>
+            <p class="hint">One name per line — up to 10. These appear on the live wheel.</p>
+            <textarea id="admParts" rows="10" placeholder="alice&#10;bob&#10;charlie&#10;…"></textarea>
+            <label class="f">Daily auto-spin time (server time, 24h)</label>
+            <div class="row-2">
+              <input id="admTime" placeholder="20:00">
+              <button class="btn sm" id="saveDraw">Save</button>
+            </div>
+            <div class="warn">⏰ Auto-spin fires once per day at this time. Server time is shown below — set accordingly.</div>
+            <p class="hint" id="serverClock" style="margin-top:10px"></p>
+          </div>
+          <div class="box glass">
+            <h3>Spin it live</h3>
+            <p class="hint">Triggers the wheel instantly for everyone currently on the Lucky Draw page.</p>
+            <button class="btn violet" id="spinNow" style="width:100%;margin-top:14px">🎡 Spin the wheel now</button>
+            <div class="mini-list" style="margin-top:18px">
+              <div class="mini"><span class="t">Last winner</span><span id="admLastWinner">—</span></div>
+              <div class="mini"><span class="t">Last spin date</span><span id="admLastDate">—</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- announcements panel -->
+      <div class="panel" id="panel-ann">
+        <div class="adm-grid">
+          <div class="box glass">
+            <h3>Post an announcement</h3>
+            <label class="f">Title</label><input id="annTitle" placeholder="Big news…">
+            <label class="f">Body</label><textarea id="annBody" rows="5" placeholder="Details…"></textarea>
+            <button class="btn" id="addAnn" style="margin-top:14px">Publish</button>
+          </div>
+          <div class="box glass">
+            <h3>Live announcements</h3>
+            <div class="mini-list" id="admAnnList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- giveaways panel -->
+      <div class="panel" id="panel-gift">
+        <div class="adm-grid">
+          <div class="box glass">
+            <h3>Create a giveaway</h3>
+            <label class="f">Title</label><input id="giftTitle" placeholder="$100 Weekend Giveaway">
+            <label class="f">Prize</label><input id="giftPrize" placeholder="e.g. $100 cash">
+            <label class="f">Details</label><textarea id="giftBody" rows="4" placeholder="How to enter…"></textarea>
+            <label class="f">Ends (optional)</label><input id="giftEnds" type="datetime-local">
+            <button class="btn" id="addGift" style="margin-top:14px">Launch giveaway</button>
+          </div>
+          <div class="box glass">
+            <h3>Active giveaways</h3>
+            <div class="mini-list" id="admGiftList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- downloads panel -->
+      <div class="panel" id="panel-dl">
+        <div class="box glass">
+          <h3>10 game download links</h3>
+          <p class="hint">Set a label and paste each download URL. Leave a URL blank to show “Coming soon”.</p>
+          <div id="dlEditor" style="margin-top:16px"></div>
+          <button class="btn" id="saveDl" style="margin-top:8px">Save all links</button>
+        </div>
+      </div>
+
+      <!-- users panel -->
+      <div class="panel" id="panel-users">
+        <div class="box glass">
+          <h3>Players &amp; balances</h3>
+          <p class="hint">Adjust a balance with + / − amounts (e.g. <code>5</code> adds $5, <code>-2.5</code> removes $2.50). You can also reset any player's password here.</p>
+          <div class="mini-list" id="usersList" style="max-height:560px;margin-top:16px"></div>
+        </div>
+      </div>
+
+      <!-- redemptions panel -->
+      <div class="panel" id="panel-redeem">
+        <div class="box glass">
+          <h3>Redemption receipts</h3>
+          <p class="hint">When a player redeems, a receipt lands here. Load the amount into their game, then mark it <b>Loaded</b>. Pending receipts expire automatically after 24h; you can also refund one back to the player's balance.</p>
+          <div class="mini-list" id="admRedeemList" style="max-height:640px;margin-top:16px">
+            <div class="hint">No redemptions yet.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- employee reports panel -->
+      <div class="panel" id="panel-reports">
+        <div class="adm-grid">
+          <div class="box glass">
+            <h3>Enter / fix a day's numbers</h3>
+            <p class="hint">Each agent normally submits their own report from their account (assign accounts in the <b>Users</b> tab). You can also enter or correct numbers here.</p>
+            <label class="f">Employee</label>
+            <select id="armEmp"><option>Famous</option><option>Hulk</option><option>Travis</option></select>
+            <label class="f">Date</label><input id="armDate" type="date">
+            <label class="f">Cash in ($)</label><input id="armIn" inputmode="decimal" placeholder="e.g. 450">
+            <label class="f">Cash out ($)</label><input id="armOut" inputmode="decimal" placeholder="e.g. 300">
+            <button class="btn" id="armSubmit" style="margin-top:14px">Save report</button>
+          </div>
+          <div class="box glass">
+            <h3>Monthly summary</h3>
+            <div class="row-2" style="margin-top:8px">
+              <input id="armMonth" type="month">
+              <button class="btn sm" id="armLoad">Load month</button>
+            </div>
+            <div class="month-total glass" id="armMonthTotal" style="margin-top:14px"></div>
+          </div>
+        </div>
+        <div class="box glass" style="margin-top:18px">
+          <h3>Daily breakdown</h3>
+          <p class="hint">Profit = cash in − cash out. Days show ⚠ until all three agents have submitted.</p>
+          <div id="armDays" style="margin-top:14px"><div class="hint">Pick a month above.</div></div>
+        </div>
+      </div>
+
+      <!-- feedbacks panel (admin-only viewing) -->
+      <div class="panel" id="panel-feedback">
+        <div class="box glass">
+          <h3>Player feedbacks</h3>
+          <p class="hint">Only admins can see these. Players send them from the Feed page.</p>
+          <div class="mini-list" id="admFeedbackList" style="max-height:640px;margin-top:16px">
+            <div class="hint">No feedback yet.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- posts & stories panel -->
+      <div class="panel" id="panel-posts">
+        <div class="adm-grid">
+          <div class="box glass">
+            <h3>📸 New post</h3>
+            <label class="f">Caption</label><textarea id="apCaption" rows="3" maxlength="1000" placeholder="What's happening…"></textarea>
+            <label class="f">Image (optional)</label><input id="apImage" type="file" accept="image/*">
+            <div class="img-preview hidden" id="apPreview"></div>
+            <button class="btn" id="apPublish" style="margin-top:14px">Publish post</button>
+            <hr style="border:none;border-top:1px solid var(--line);margin:22px 0">
+            <h3>⏱ New 24h story</h3>
+            <label class="f">Image (required)</label><input id="asImage" type="file" accept="image/*">
+            <div class="img-preview hidden" id="asPreview"></div>
+            <label class="f">Caption (optional)</label><input id="asCaption" maxlength="200" placeholder="Short caption…">
+            <button class="btn violet" id="asPublish" style="margin-top:14px">Post story (24h)</button>
+          </div>
+          <div class="box glass">
+            <h3>Live posts &amp; stories</h3>
+            <div class="label" style="margin-top:8px">Stories</div>
+            <div class="mini-list" id="admStoryList" style="margin-top:8px"><div class="hint">None.</div></div>
+            <div class="label" style="margin-top:18px">Posts</div>
+            <div class="mini-list" id="admPostList" style="max-height:420px;margin-top:8px"><div class="hint">None.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- bonus claims panel -->
+      <div class="panel" id="panel-bonus">
+        <div class="box glass">
+          <h3>Deposit bonus spins</h3>
+          <p class="hint">Every player spin lands here. When a player claims their bonus on a deposit, mark it <b>Claimed</b>.</p>
+          <div class="mini-list" id="admBonusList" style="max-height:640px;margin-top:16px">
+            <div class="hint">No bonus spins yet.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- settings panel -->
+      <div class="panel" id="panel-settings">
+        <div class="box glass">
+          <h3>Facebook page links</h3>
+          <p class="hint">These show on everyone's Feed page. Leave blank to hide a button.</p>
+          <label class="f">Main Facebook page — Link 1</label>
+          <input id="setFb1" placeholder="https://facebook.com/…">
+          <label class="f">Main Facebook page — Link 2</label>
+          <input id="setFb2" placeholder="https://facebook.com/…">
+          <button class="btn" id="saveSettings" style="margin-top:14px">Save links</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===== mobile bottom nav (phone / app view) ===== -->
+  <nav class="mobilenav" id="mnav">
+    <button data-view="home" class="active" aria-label="Home">
+      <svg viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10"/></svg><span>Home</span>
+    </button>
+    <button data-view="feed" aria-label="Feed">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="12" cy="12" r="3.5"/><path d="M17 7h.01"/></svg><span>Feed</span>
+    </button>
+    <button data-view="bonus" aria-label="Bonus">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M6 6l12 12M18 6L6 18"/></svg><span>Bonus</span>
+    </button>
+    <button data-view="wallet" aria-label="Wallet">
+      <svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M16 14h2"/></svg><span>Wallet</span>
+    </button>
+    <button data-view="announcements" aria-label="News">
+      <svg viewBox="0 0 24 24"><path d="M6 9a6 6 0 1112 0c0 5 2 6 2 6H4s2-1 2-6z"/><path d="M10 20a2 2 0 004 0"/></svg><span>News</span>
+    </button>
+    <button data-view="giveaways" aria-label="Giveaways">
+      <svg viewBox="0 0 24 24"><rect x="3" y="8" width="18" height="12" rx="1"/><path d="M3 12h18M12 8v12M12 8S10 3.5 7.5 5 9 8 12 8zM12 8s2-4.5 4.5-3S15 8 12 8z"/></svg><span>Gifts</span>
+    </button>
+    <button data-view="draw" aria-label="Lucky Draw">
+      <svg viewBox="0 0 24 24"><path d="M4 7h16v3a2 2 0 000 4v3H4v-3a2 2 0 000-4V7z"/></svg><span>Draw</span>
+    </button>
+    <button data-view="downloads" aria-label="Games">
+      <svg viewBox="0 0 24 24"><rect x="2" y="8" width="20" height="9" rx="4"/><path d="M6.5 12.5h3M8 11v3M15.5 12h.02M18 13.5h.02"/></svg><span>Games</span>
+    </button>
+    <button data-view="vault" aria-label="Vault">
+      <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="12" cy="11" r="3"/><path d="M12 14v3"/></svg><span>Vault</span>
+    </button>
+    <button data-view="reports" id="mnavReports" class="hidden" aria-label="Reports">
+      <svg viewBox="0 0 24 24"><path d="M4 20V8M10 20V4M16 20v-8M21 20H3"/></svg><span>Reports</span>
+    </button>
+    <button data-view="admin" id="mnavAdmin" class="hidden" aria-label="Admin">
+      <svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/></svg><span>Admin</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ===== story viewer modal ===== -->
+<div class="modal-overlay hidden" id="storyModal">
+  <div class="story-viewer">
+    <div class="story-progress"><div class="story-progress-fill" id="storyBar"></div></div>
+    <img id="storyImg" alt="story">
+    <div class="story-cap" id="storyCap"></div>
+    <button class="story-close" id="storyClose" aria-label="Close">✕</button>
+  </div>
+</div>
+
+<!-- ===== redemption receipt modal ===== -->
+<div class="modal-overlay hidden" id="receiptModal">
+  <div class="receipt glass">
+    <div class="receipt-top">
+      <img src="assets/logo.jpg" alt="" class="receipt-logo">
+      <div>
+        <div class="label">Redemption receipt</div>
+        <div class="receipt-amt glow" id="rcAmt">$0.00</div>
+      </div>
+    </div>
+    <div class="receipt-codebox">
+      <div class="label">Your code</div>
+      <div class="receipt-code" id="rcCode">JS-XXXX-XXXX</div>
+      <button class="btn sm ghost" id="rcCopy" style="margin-top:10px">Copy code</button>
+    </div>
+    <div class="receipt-meta" id="rcMeta"></div>
+    <p class="hint" id="rcNote" style="margin-top:14px"></p>
+    <div class="receipt-btns">
+      <button class="btn ghost" id="rcPrint">🖨️ Print receipt</button>
+      <button class="btn" id="rcDone">Done</button>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
